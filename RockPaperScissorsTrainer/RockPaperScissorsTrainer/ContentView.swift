@@ -16,7 +16,9 @@ struct ContentView: View {
     @State private var shouldWin = Bool.random()
     @State private var didAnswerCorrectly = false
     @State private var didAnswerWrong = false
-    @State var score = 0
+    @State private var gameDidEnd = false
+    @State private var score = 0
+    @State private var rounds = 0
 
     var body: some View {
 
@@ -67,6 +69,11 @@ struct ContentView: View {
                     } message: {
                         Text("Your score: \(score)")
                     }
+                    .alert("Game over.", isPresented: $gameDidEnd) {
+                        Button("Continue", action: startOver)
+                    } message: {
+                        Text("Your final score: \(score)")
+                    }
                 } header: {
                     Text("Which option would you select")
                 }
@@ -84,19 +91,34 @@ struct ContentView: View {
     func testSelection(senderMove: Moves) {
         let correctMove = shouldWin ? winningMoves[currentChoice] : losingMoves[currentChoice]
 
-        if senderMove == possibleMoves[currentChoice] {
-            didAnswerWrong.toggle()
-        } else if senderMove == correctMove {
-            score += 1
-            didAnswerCorrectly.toggle()
+        rounds += 1
+        if rounds >= 10 {
+            if senderMove == correctMove {
+                score += 1
+            }
+            gameDidEnd = true
         } else {
-            didAnswerWrong.toggle()
+            if senderMove == possibleMoves[currentChoice] {
+                didAnswerWrong.toggle()
+            } else if senderMove == correctMove {
+                score += 1
+                didAnswerCorrectly.toggle()
+            } else {
+                didAnswerWrong.toggle()
+            }
         }
     }
 
     func reset() {
         currentChoice = Int.random(in: 0...2)
         shouldWin.toggle()
+    }
+
+    func startOver() {
+        rounds = 0
+        score = 0
+        currentChoice = Int.random(in: 0...2)
+        shouldWin = Bool.random()
     }
 }
 
