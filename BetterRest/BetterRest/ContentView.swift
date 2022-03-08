@@ -10,10 +10,10 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var wakeup = defaultWakeTime
-    @State private var sleepAmout = 8.0
+    @State private var sleepAmount = 8.0
     @State private var coffeeAmount = 1
 
-    @State private var alertTitle = ""
+//    @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var showingAlert = false
 
@@ -33,11 +33,17 @@ struct ContentView: View {
                 DatePicker("Please enter a time", selection: $wakeup, displayedComponents: .hourAndMinute)
                     .labelsHidden()
                 }
+                .onChange(of: wakeup) { newValue in
+                    calculateBedtime()
+                }
 
                 VStack(alignment: .leading, spacing: 0) {
                 Text("Desired amount of sleep")
                     .font(.headline)
-                Stepper("\(sleepAmout.formatted()) hours", value: $sleepAmout, in: 4...12, step: 0.25)
+                Stepper("\(sleepAmount.formatted()) hours", value: $sleepAmount, in: 4...12, step: 0.25)
+                }
+                .onChange(of: sleepAmount) { newValue in
+                    calculateBedtime()
                 }
 
                 VStack(alignment: .leading, spacing: 0) {
@@ -45,16 +51,30 @@ struct ContentView: View {
                     .font(.headline)
                 Stepper(coffeeAmount == 1 ? "1 Cup" : "\(coffeeAmount) cups", value: $coffeeAmount, in: 1...20)
                 }
+                .onChange(of: coffeeAmount) { newValue in
+                    calculateBedtime()
+                }
+
+                Section {
+                    Text(alertMessage)
+                        .font(.largeTitle)
+                        .frame(alignment: .center)
+                } header: {
+                    Text("Your recommended bedtime is:")
+                }
             }
             .navigationTitle("BetterRest")
-            .toolbar {
-                Button("Calculate", action: calculateBedtime)
+            .onAppear {
+                calculateBedtime()
             }
-            .alert(alertTitle, isPresented: $showingAlert) {
-                Button("OK") { }
-            } message: {
-                Text(alertMessage)
-            }
+//            .toolbar {
+//                Button("Calculate", action: calculateBedtime)
+//            }
+//            .alert(alertTitle, isPresented: $showingAlert) {
+//                Button("OK") { }
+//            } message: {
+//                Text(alertMessage)
+//            }
         }
     }
 
@@ -67,13 +87,13 @@ struct ContentView: View {
             let hour = components.hour ?? 0
             let minute = components.minute ?? 0
             let seconds = Double(((hour * 60) + minute) * 60)
-            let prediction = try model.prediction(wake: seconds, estimatedSleep: sleepAmout, coffee: Double(coffeeAmount))
+            let prediction = try model.prediction(wake: seconds, estimatedSleep: sleepAmount, coffee: Double(coffeeAmount))
 
             let sleepTime = wakeup - prediction.actualSleep
-            alertTitle = "Your ideal bedtime is..."
+//            alertTitle = "Your ideal bedtime is..."
             alertMessage = sleepTime.formatted(date: .omitted, time: .shortened)
         } catch {
-            alertTitle = "Error"
+//            alertTitle = "Error"
             alertMessage = "Sorry, there was a problem calculating your bedtime."
         }
 
